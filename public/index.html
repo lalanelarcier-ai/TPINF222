@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog INF222 – Gestion des Articles</title>
+  <meta name="description" content="Interface web pour l'API de gestion d'articles du blog INF222 TAF1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* ─── Design System ─────────────────────────────────────── */
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #252840;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(108,99,255,.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1a1d2e 0%, #252840 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header .badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      letter-spacing: .05em;
+    }
+
+    header .swagger-link {
+      margin-left: auto;
+      background: var(--surface2);
+      color: var(--accent2);
+      border: 1px solid var(--border);
+      padding: .5rem 1rem;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    header .swagger-link:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ─── Layout ─────────────────────────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Cards ──────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    /* ─── Form ───────────────────────────────────────────────── */
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .4rem; font-weight: 500; }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: .65rem .9rem;
+      font-size: .9rem;
+      font-family: inherit;
+      transition: border-color .2s;
+      outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 100px; }
+
+    /* ─── Buttons ───────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .6rem 1.2rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-danger:hover  { background: #dc2626; }
+    .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover   { border-color: var(--accent); color: var(--accent2); }
+    .btn-sm { padding: .35rem .8rem; font-size: .78rem; }
+
+    .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+    /* ─── Search bar ─────────────────────────────────────────── */
+    .search-bar {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+    }
+    .search-bar input { flex: 1; }
+
+    /* ─── Article list ───────────────────────────────────────── */
+    #article-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .article-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s;
+      position: relative;
+      animation: fadeIn .3s ease;
+    }
+    .article-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+    .article-item h3 {
+      font-size: .95rem;
+      font-weight: 600;
+      margin-bottom: .4rem;
+      color: var(--text);
+    }
+    .article-item .meta {
+      font-size: .75rem;
+      color: var(--muted);
+      display: flex;
+      gap: .8rem;
+      flex-wrap: wrap;
+      margin-bottom: .6rem;
+    }
+    .article-item .meta span::before { margin-right: .3rem; }
+    .article-item .excerpt {
+      font-size: .82rem;
+      color: #a0aec0;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(108,99,255,.15);
+      color: var(--accent2);
+      font-size: .7rem;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      margin: .2rem .1rem 0;
+    }
+
+    .article-actions {
+      position: absolute;
+      top: .8rem;
+      right: .8rem;
+      display: flex;
+      gap: .4rem;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .article-item:hover .article-actions { opacity: 1; }
+
+    /* ─── Toast ──────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .9rem 1.4rem;
+      border-radius: 10px;
+      font-size: .85rem;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: .6rem;
+      z-index: 999;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+    #toast.success { border-color: var(--success); }
+    #toast.error   { border-color: var(--danger); }
+    #toast.show { display: flex; }
+
+    /* ─── Empty state ───────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty span { font-size: 2.5rem; display: block; margin-bottom: .8rem; }
+
+    /* ─── Spinner ───────────────────────────────────────────── */
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 2rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .counter-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><i class="ph ph-notebook"></i> Blog INF222</h1>
+  <span class="badge">TAF1</span>
+  <a href="/api-docs" target="_blank" class="swagger-link"><i class="ph ph-book-open"></i> Swagger UI</a>
+</header>
+
+<main>
+  <!-- ── Formulaire ────────────────────────────── -->
+  <section>
+    <div class="card">
+      <h2><i class="ph ph-pencil-simple"></i> <span id="form-title">Nouvel Article</span></h2>
+      <form id="article-form">
+        <input type="hidden" id="article-id" />
+        <div class="form-group">
+          <label for="titre">Titre *</label>
+          <input id="titre" type="text" placeholder="Titre de l'article" required />
+        </div>
+        <div class="form-group">
+          <label for="auteur">Auteur *</label>
+          <input id="auteur" type="text" placeholder="Nom de l'auteur" required />
+        </div>
+        <div class="form-group">
+          <label for="categorie">Catégorie</label>
+          <input id="categorie" type="text" placeholder="Tech, Science, Culture…" />
+        </div>
+        <div class="form-group">
+          <label for="tags">Tags <small style="color:var(--muted)">(séparés par virgule)</small></label>
+          <input id="tags" type="text" placeholder="nodejs, api, backend" />
+        </div>
+        <div class="form-group">
+          <label for="contenu">Contenu *</label>
+          <textarea id="contenu" placeholder="Rédigez votre article ici…" required></textarea>
+        </div>
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary" id="submit-btn"><i class="ph ph-paper-plane-tilt"></i> Publier</button>
+          <button type="button" class="btn btn-ghost" id="reset-btn"><i class="ph ph-x"></i> Annuler</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Filtre -->
+    <div class="card" style="margin-top:1rem">
+      <h2><i class="ph ph-funnel"></i> Filtrer</h2>
+      <div class="form-group">
+        <label for="filter-cat">Catégorie</label>
+        <input id="filter-cat" type="text" placeholder="ex: Tech" />
+      </div>
+      <div class="form-group">
+        <label for="filter-date">Date (YYYY-MM-DD)</label>
+        <input id="filter-date" type="date" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="applyFilter()">Filtrer</button>
+        <button class="btn btn-ghost" onclick="clearFilter()">Réinitialiser</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Liste des articles ────────────────────── -->
+  <section>
+    <div class="card">
+      <h2>
+        <i class="ph ph-list-dashes"></i> Articles
+        <span class="counter-badge" id="count-badge">0</span>
+      </h2>
+      <div class="search-bar">
+        <input id="search-input" type="text" placeholder="Rechercher dans titre et contenu…" />
+        <button class="btn btn-primary" onclick="searchArticles()"><i class="ph ph-magnifying-glass"></i></button>
+      </div>
+      <div id="article-list">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  const API = '/api/articles';
+
+  // ─── Toast ───────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.innerHTML = (type === 'success' ? '<i class="ph-fill ph-check-circle" style="color:var(--success)"></i> ' : '<i class="ph-fill ph-x-circle" style="color:var(--danger)"></i> ') + escHtml(msg);
+    t.className = `show ${type}`;
+    setTimeout(() => (t.className = ''), 3000);
+  }
+
+  // ─── Fetch helpers ────────────────────────────────────────────
+  async function api(url, opts = {}) {
+    const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    return r.json();
+  }
+
+  // ─── Load articles ────────────────────────────────────────────
+  async function loadArticles(params = '') {
+    const list = document.getElementById('article-list');
+    list.innerHTML = '<div class="spinner"></div>';
+    const res = await api(API + (params ? `?${params}` : ''));
+    renderList(res.data || []);
+  }
+
+  function renderList(articles) {
+    const list = document.getElementById('article-list');
+    document.getElementById('count-badge').textContent = articles.length;
+    if (!articles.length) {
+      list.innerHTML = '<div class="empty"><span><i class="ph ph-tray"></i></span>Aucun article trouvé.</div>';
+      return;
+    }
+    list.innerHTML = articles.map(a => `
+      <div class="article-item" onclick="editArticle(${a.id})">
+        <div class="article-actions">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editArticle(${a.id})"><i class="ph ph-pencil-simple"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteArticle(${a.id})"><i class="ph ph-trash"></i></button>
+        </div>
+        <h3>${escHtml(a.titre)}</h3>
+        <div class="meta">
+          <span><i class="ph ph-user"></i> ${escHtml(a.auteur)}</span>
+          ${a.categorie ? `<span><i class="ph ph-tag"></i> ${escHtml(a.categorie)}</span>` : ''}
+          <span><i class="ph ph-calendar-blank"></i> ${new Date(a.date_creation).toLocaleDateString('fr-FR')}</span>
+        </div>
+        <p class="excerpt">${escHtml(a.contenu)}</p>
+        <div>${(a.tags || '').split(',').filter(Boolean).map(t => `<span class="tag">#${escHtml(t.trim())}</span>`).join('')}</div>
+      </div>`).join('');
+  }
+
+  function escHtml(t) {
+    return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ─── Create / Update ──────────────────────────────────────────
+  document.getElementById('article-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('article-id').value;
+    const body = {
+      titre: document.getElementById('titre').value,
+      auteur: document.getElementById('auteur').value,
+      categorie: document.getElementById('categorie').value,
+      tags: document.getElementById('tags').value,
+      contenu: document.getElementById('contenu').value,
+    };
+    const res = id
+      ? await api(`${API}/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+      : await api(API, { method: 'POST', body: JSON.stringify(body) });
+    if (res.success) {
+      showToast(res.message);
+      resetForm();
+      loadArticles();
+    } else {
+      showToast(res.message, 'error');
+    }
+  });
+
+  // ─── Edit ─────────────────────────────────────────────────────
+  async function editArticle(id) {
+    const res = await api(`${API}/${id}`);
+    if (!res.success) return showToast('Impossible de charger cet article.', 'error');
+    const a = res.data;
+    document.getElementById('article-id').value = a.id;
+    document.getElementById('titre').value = a.titre;
+    document.getElementById('auteur').value = a.auteur;
+    document.getElementById('categorie').value = a.categorie || '';
+    document.getElementById('tags').value = a.tags || '';
+    document.getElementById('contenu').value = a.contenu;
+    document.getElementById('form-title').innerHTML = 'Modifier l\'article #' + id;
+    document.getElementById('submit-btn').innerHTML = '<i class="ph ph-floppy-disk"></i> Enregistrer';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ─── Delete ───────────────────────────────────────────────────
+  async function deleteArticle(id) {
+    if (!confirm(`Supprimer l'article #${id} ?`)) return;
+    const res = await api(`${API}/${id}`, { method: 'DELETE' });
+    if (res.success) { showToast(res.message); loadArticles(); }
+    else showToast(res.message, 'error');
+  }
+
+  // ─── Search ───────────────────────────────────────────────────
+  async function searchArticles() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return loadArticles();
+    const res = await api(`${API}/search?query=${encodeURIComponent(q)}`);
+    renderList(res.data || []);
+  }
+
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchArticles();
+  });
+
+  // ─── Filter ───────────────────────────────────────────────────
+  function applyFilter() {
+    const cat  = document.getElementById('filter-cat').value.trim();
+    const date = document.getElementById('filter-date').value;
+    const params = new URLSearchParams();
+    if (cat)  params.set('categorie', cat);
+    if (date) params.set('date', date);
+    loadArticles(params.toString());
+  }
+
+  function clearFilter() {
+    document.getElementById('filter-cat').value = '';
+    document.getElementById('filter-date').value = '';
+    loadArticles();
+  }
+
+  // ─── Reset form ───────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('article-id').value = '';
+    document.getElementById('article-form').reset();
+    document.getElementById('form-title').innerHTML = 'Nouvel Article';
+    document.getElementById('submit-btn').innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Publier';
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', resetForm);
+
+  // ─── Init ─────────────────────────────────────────────────────
+  loadArticles();
+</script>
+</body>
+</html>
